@@ -26,6 +26,14 @@ targetCompatibility = 1.8
 dependencies {
     compile("org.springframework.boot:spring-boot-starter-web")
     compile("org.springframework.boot:spring-boot-devtools")
-    compile("org.projectlombok:lombok")
+
+    compile("org.projectlombok:lombok:1.18.4")
+
+    compile("org.springframework.boot:spring-boot-starter-thymeleaf")
+    compile("org.springframework.boot:spring-boot-starter-web")
+
+    compile("javax.validation:validation-api:2.0.0.Final")
+    compile("org.hibernate.validator:hibernate-validator")
+
     testCompile("org.springframework.boot:spring-boot-starter-test")
 }

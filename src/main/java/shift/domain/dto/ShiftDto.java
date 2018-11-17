@@ -1,14 +1,34 @@
 package shift.domain.dto;
 
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import lombok.*;
+import org.hibernate.validator.constraints.Range;
 
-import java.io.Serializable;
+import javax.validation.constraints.NotNull;
 
 @Getter
 @Setter
-@Data
-public class ShiftDto implements Serializable {
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(Include.NON_NULL)
+public class ShiftDto {
 
+    private Integer id;
+
+    @Range(max = 23, message = "Shift hour can be between 0-23")
+    @NotNull
+    private Integer startHour;
+
+    @Range(max = 59, message = "Shift minute can be between 0-59")
+    @NotNull
+    private Integer startMinute;
+
+    @Range(max = 23, message = "Shift hour can be between 0-23")
+    @NotNull
+    private Integer endHour;
+
+    @Range(max = 59, message = "Shift minute can be between 0-59")
+    @NotNull
+    private Integer endMinute;
 }
