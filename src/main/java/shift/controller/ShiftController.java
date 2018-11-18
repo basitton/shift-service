@@ -34,17 +34,17 @@ public class ShiftController {
     }
 
     @GetMapping("/shifts/{shiftId}")
-    public Shift getShift(@PathVariable(value = "shiftId") int shiftId) throws ShiftNotFoundException {
+    public Shift getShift(@PathVariable(value = "shiftId") long shiftId) throws ShiftNotFoundException {
         return shiftService.getShift(shiftId);
     }
 
     @PutMapping("/shifts/{shiftId}")
-    public Shift updateShift(@PathVariable(value = "shiftId") int shiftId, @RequestBody ShiftDto shiftDto) throws ShiftNotFoundException {
+    public Shift updateShift(@PathVariable(value = "shiftId") long shiftId, @RequestBody ShiftDto shiftDto) throws ShiftNotFoundException {
         return shiftService.updateShift(shiftId, shiftDto);
     }
 
     @DeleteMapping("/shifts/{shiftId}")
-    public void deleteShift(@PathVariable(value = "shiftId") int shiftId) throws ShiftNotFoundException {
+    public void deleteShift(@PathVariable(value = "shiftId") long shiftId) throws ShiftNotFoundException {
         shiftService.deleteShift(shiftId);
     }
 

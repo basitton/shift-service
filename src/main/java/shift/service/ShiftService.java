@@ -1,75 +1,82 @@
 package shift.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import shift.domain.Shift;
-import shift.domain.dao.ShiftDao;
 import shift.domain.dto.SearchShiftDto;
 import shift.domain.dto.ShiftDto;
+import shift.domain.h2.SearchCriteria;
+import shift.domain.h2.UserShift;
+import shift.domain.h2.UserShiftSpecification;
 import shift.exception.ShiftIllegalArgumentException;
 import shift.exception.ShiftNotFoundException;
+import shift.repository.UserShiftDao;
 
 import javax.validation.constraints.NotNull;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 public class ShiftService {
+    private static final String USERNAME_KEY = "username";
+    private static final String START_TIME_KEY = "startTime";
+    private static final String END_TIME_KEY = "endTime";
 
-    // a key would usually be managed by a DB
-    private int key = 0;
+    private UserShiftDao userShiftDao;
 
-    private ShiftDao shiftDao;
-
-    @Autowired
-    public ShiftService(ShiftDao shiftDao) {
-        this.shiftDao = shiftDao;
+    public ShiftService(UserShiftDao userShiftDao) {
+        this.userShiftDao = userShiftDao;
     }
 
     public Shift createShift(@NotNull ShiftDto shiftDto) {
         validateShiftTimes(shiftDto);
 
-        shiftDto.setId(key);
-        // increment identifier for each shift (would usually be managed by a DB)
-        key++;
+        UserShift userShift = translateShift(shiftDto);
 
         // persist shift into "database"
-        shiftDao.save(shiftDto);
+        userShiftDao.save(userShift);
 
         // build the result to return
-        return buildResultShift(shiftDto);
+        return buildResultShift(userShift);
     }
 
     public List<Shift> searchShifts(@NotNull SearchShiftDto searchShiftDto) {
+        LocalTime searchStartTime = convertToTime(searchShiftDto.getFromStartHour(), searchShiftDto.getFromStartMinute());
+        LocalTime searchEndTime = convertToTime(searchShiftDto.getToEndHour(), searchShiftDto.getToEndMinute());
 
-        return shiftDao.getAll().stream()
-                .filter(shiftDto -> isShiftWithinSearch(shiftDto, searchShiftDto))
-                .sorted(Comparator.comparing(ShiftDto::getStartHour).thenComparing(ShiftDto::getStartMinute))
+        UserShiftSpecification userSpec = getSpecification(getSearchCriteriaForString(USERNAME_KEY, ":", "Test"));
+        UserShiftSpecification startSpec = getSpecification(getSearchCriteriaForTime(START_TIME_KEY, ">:", searchStartTime));
+        UserShiftSpecification endSpec = getSpecification(getSearchCriteriaForTime(END_TIME_KEY, "<:", searchEndTime));
+
+        return userShiftDao.getAll(userSpec, startSpec, endSpec).stream()
                 .map(this::buildResultShift)
                 .collect(Collectors.toList());
     }
 
-    public Shift getShift(@NotNull int shiftId) throws ShiftNotFoundException {
-        return buildResultShift(shiftDao.get(shiftId));
+    public Shift getShift(@NotNull long shiftId) throws ShiftNotFoundException {
+        return buildResultShift(userShiftDao.get(shiftId));
     }
 
-    public Shift updateShift(@NotNull int shiftId, @NotNull ShiftDto shiftDto) throws ShiftNotFoundException {
+    public Shift updateShift(@NotNull long shiftId, @NotNull ShiftDto shiftDto) throws ShiftNotFoundException {
         validateShiftTimes(shiftDto);
-        shiftDao.update(shiftId, shiftDto);
+        userShiftDao.update(shiftId, translateShift(shiftDto));
         // return updated shift result
-        return buildResultShift(shiftDao.get(shiftId));
+        return buildResultShift(userShiftDao.get(shiftId));
     }
 
-    public void deleteShift(@NotNull int shiftId) throws ShiftNotFoundException {
-        shiftDao.delete(shiftId);
+    public void deleteShift(@NotNull long shiftId) throws ShiftNotFoundException {
+        userShiftDao.delete(shiftId);
     }
 
     private void validateShiftTimes(ShiftDto shiftDto) {
-        LocalTime startTime = convertToTime(shiftDto.getStartHour(), shiftDto.getStartMinute());
-        LocalTime endTime = convertToTime(shiftDto.getEndHour(), shiftDto.getEndMinute());
+        int startHour = shiftDto.getStartHour();
+        int startMinute = shiftDto.getStartMinute();
+        int endHour = shiftDto.getEndHour();
+        int endMinute = shiftDto.getEndMinute();
+
+        LocalTime startTime = convertToTime(startHour, startMinute);
+        LocalTime endTime = convertToTime(endHour, endMinute);
 
         if (startTime.equals(endTime)) {
             throw new ShiftIllegalArgumentException("Shifts must have a different start and end time range.");
@@ -78,46 +85,36 @@ public class ShiftService {
             throw new ShiftIllegalArgumentException("A shift's end time cannot be before a shift's start time.");
         }
 
-        // validate newly created shift does not overlap with an existing shift
-        boolean shiftExistsForTimeFrame = shiftDao.getAll().stream()
-                .anyMatch(existingShiftDto -> isShiftOverlappingWithAnother(shiftDto, existingShiftDto));
+        UserShiftSpecification userSpec = getSpecification(getSearchCriteriaForString(USERNAME_KEY, ":", "Test"));
 
-        if(shiftExistsForTimeFrame) {
+        // validate newly created shift does not overlap with an existing shift
+        boolean isOverlapping = userShiftDao.getAll(userSpec).stream()
+                .anyMatch(userShift -> isShiftOverlappingWithAnother(shiftDto, userShift));
+        if(isOverlapping) {
             throw new ShiftIllegalArgumentException("This shift overlaps with an existing shift.");
         }
     }
 
-    private Shift buildResultShift(ShiftDto shiftDto) {
+    private Shift buildResultShift(UserShift userShift) {
         return Shift.builder()
-                .id(String.valueOf(shiftDto.getId()))
-                .startTime(convertToLocalTimeAndFormat(shiftDto.getStartHour(), shiftDto.getStartMinute()))
-                .endTime(convertToLocalTimeAndFormat(shiftDto.getEndHour(), shiftDto.getEndMinute()))
+                .id(String.valueOf(userShift.getId()))
+                .startTime(formatLocalTime(userShift.getStartTime()))
+                .endTime(formatLocalTime(userShift.getEndTime()))
                 .build();
     }
 
-    private boolean isShiftOverlappingWithAnother(ShiftDto newShiftDto, ShiftDto existingShiftDto) {
-        LocalTime newStartTime = convertToTime(newShiftDto.getStartHour(), newShiftDto.getStartMinute());
-        LocalTime newEndTime = convertToTime(newShiftDto.getEndHour(), newShiftDto.getEndMinute());
+    private boolean isShiftOverlappingWithAnother(ShiftDto newUserShift, UserShift existingUserShift) {
+        LocalTime newStartTime = convertToTime(newUserShift.getStartHour(), newUserShift.getStartMinute());
+        LocalTime newEndTime = convertToTime(newUserShift.getEndHour(), newUserShift.getEndMinute());
 
-        LocalTime existingStartTime = convertToTime(existingShiftDto.getStartHour(), existingShiftDto.getStartMinute());
-        LocalTime existingEndTime = convertToTime(existingShiftDto.getEndHour(), existingShiftDto.getEndMinute());
+        LocalTime existingStartTime = existingUserShift.getStartTime();
+        LocalTime existingEndTime = existingUserShift.getEndTime();
 
         return newStartTime.equals(existingStartTime) ||
                 newEndTime.equals(existingEndTime) ||
                 isTimeWithinRange(newStartTime, existingStartTime, existingEndTime) ||
                 isTimeWithinRange(newEndTime, existingStartTime, existingEndTime) ||
                 (newStartTime.isBefore(existingStartTime) && newEndTime.isAfter(existingEndTime));
-    }
-
-    private boolean isShiftWithinSearch(ShiftDto existingShiftDto, SearchShiftDto searchShiftDto) {
-        LocalTime shiftStartTime = convertToTime(existingShiftDto.getStartHour(), existingShiftDto.getStartMinute());
-        LocalTime shiftEndTime = convertToTime(existingShiftDto.getEndHour(), existingShiftDto.getEndMinute());
-
-        LocalTime searchStartTime = convertToTime(searchShiftDto.getFromStartHour(), searchShiftDto.getFromStartMinute());
-        LocalTime searchEndTime = convertToTime(searchShiftDto.getToEndHour(), searchShiftDto.getToEndMinute());
-
-        return (shiftStartTime.equals(searchStartTime) || shiftStartTime.isAfter(searchStartTime)) &&
-                (shiftEndTime.equals(searchEndTime) || shiftEndTime.isBefore(searchEndTime));
     }
 
     private boolean isTimeWithinRange(LocalTime time, LocalTime rangeStartTime, LocalTime rangeEndTime) {
@@ -128,7 +125,25 @@ public class ShiftService {
         return LocalTime.of(hour, minute);
     }
 
-    private String convertToLocalTimeAndFormat(int hour, int minute) {
-        return convertToTime(hour, minute).format(DateTimeFormatter.ofPattern("hh:mm a"));
+    private String formatLocalTime(LocalTime localTime) {
+        return localTime.format(DateTimeFormatter.ofPattern("hh:mm a"));
+    }
+
+    private UserShiftSpecification getSpecification(SearchCriteria searchCriteria) {
+        return new UserShiftSpecification(searchCriteria);
+    }
+
+    private SearchCriteria getSearchCriteriaForString(String key, String operation, String value) {
+        return new SearchCriteria(key, operation, value);
+    }
+
+    private SearchCriteria getSearchCriteriaForTime(String key, String operation, LocalTime time) {
+        return new SearchCriteria(key, operation, time);
+    }
+
+    private UserShift translateShift(ShiftDto shiftDto) {
+        return new UserShift(null, "Test",
+                convertToTime(shiftDto.getStartHour(), shiftDto.getStartMinute()),
+                convertToTime(shiftDto.getEndHour(), shiftDto.getEndMinute()));
     }
 }
