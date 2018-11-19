@@ -1,7 +1,6 @@
 package shift.domain.h2.Shift;
 
 import lombok.*;
-import shift.domain.h2.User.User;
 
 import javax.persistence.*;
 import java.time.LocalTime;
