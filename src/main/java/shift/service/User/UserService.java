@@ -3,13 +3,13 @@ package shift.service.User;
 import org.h2.util.StringUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import shift.domain.dao.UserRepository;
 import shift.domain.h2.SearchCriteria;
 import shift.domain.h2.User.User;
 import shift.domain.h2.User.UserSpecification;
 
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @Service
@@ -35,7 +35,7 @@ public class UserService {
                 .orElseThrow(() -> new UsernameNotFoundException("No username exists with username " + username));
     }
 
-    public void validateUser(String username) throws UsernameNotFoundException {
+    public void validateUser(@NotNull String username) throws UsernameNotFoundException {
         getUserByUsername(username);
     }
 

@@ -6,7 +6,6 @@ import org.springframework.web.bind.annotation.*;
 import shift.domain.dto.ResultShiftDto;
 import shift.domain.dto.SearchShiftDto;
 import shift.domain.dto.ShiftDto;
-import shift.domain.h2.Shift.Shift;
 import shift.exception.ShiftNotFoundException;
 import shift.service.Shift.ShiftService;
 
@@ -26,8 +25,11 @@ public class ShiftController {
 
     @PreAuthorize("hasRole('ROLE_MANAGER')")
     @GetMapping("/all")
-    public List<Shift> getAllShifts() {
-        return shiftService.getAllShifts();
+    public List<ResultShiftDto> getAllShifts(@RequestParam(value = "fromStartHour", defaultValue = "0", required = false) int fromStartHour,
+                                    @RequestParam(value = "fromStartMinute", defaultValue = "0", required = false) int fromStartMinute,
+                                    @RequestParam(value = "toEndHour", defaultValue = "23", required = false) int toEndHour,
+                                    @RequestParam(value = "toEndMinute", defaultValue = "59", required = false) int toEndMinute) {
+        return shiftService.getAllShifts(getSearchShiftDto(fromStartHour, fromStartMinute, toEndHour, toEndMinute));
     }
 
     @PreAuthorize("hasRole('ROLE_MANAGER')")
@@ -39,10 +41,10 @@ public class ShiftController {
     @PreAuthorize("hasAnyRole('ROLE_MANAGER, ROLE_EMPLOYEE')")
     @GetMapping("/{shiftId}")
     public ResultShiftDto getShift(@PathVariable(value = "shiftId") long shiftId) throws ShiftNotFoundException {
-        return shiftService.getShift(null, shiftId);
+        return shiftService.getAnyShiftFromDb(shiftId);
     }
 
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
+    @PreAuthorize("hasAnyRole('ROLE_MANAGER, ROLE_EMPLOYEE')")
     @GetMapping("/users/{username}/{shiftId}")
     public ResultShiftDto getShiftForUser(@PathVariable(value = "username") String username, @PathVariable(value = "shiftId") long shiftId) throws ShiftNotFoundException {
         return shiftService.getShift(username, shiftId);
@@ -68,7 +70,7 @@ public class ShiftController {
                                                @RequestParam(value = "toEndMinute", defaultValue = "59", required = false) int toEndMinute) {
 
 
-        return shiftService.searchShifts(null, new SearchShiftDto(fromStartHour, fromStartMinute, toEndHour, toEndMinute));
+        return shiftService.searchShifts(null, getSearchShiftDto(fromStartHour, fromStartMinute, toEndHour, toEndMinute));
     }
 
     @PreAuthorize("hasRole('ROLE_MANAGER')")
@@ -80,6 +82,10 @@ public class ShiftController {
                                                     @RequestParam(value = "toEndMinute", defaultValue = "59", required = false) int toEndMinute) {
 
 
-        return shiftService.searchShifts(username, new SearchShiftDto(fromStartHour, fromStartMinute, toEndHour, toEndMinute));
+        return shiftService.searchShifts(username, getSearchShiftDto(fromStartHour, fromStartMinute, toEndHour, toEndMinute));
+    }
+
+    private SearchShiftDto getSearchShiftDto(int fromStartHour, int fromStartMinute, int toEndHour, int toEndMinute) {
+        return new SearchShiftDto(fromStartHour, fromStartMinute, toEndHour, toEndMinute);
     }
 }

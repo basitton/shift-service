@@ -33,13 +33,26 @@ public class ShiftService {
         this.userService = userService;
     }
 
+    public List<ResultShiftDto> getAllShifts(@NotNull SearchShiftDto searchShiftDto) {
+        LocalTime searchStartTime = convertToTime(searchShiftDto.getFromStartHour(), searchShiftDto.getFromStartMinute());
+        LocalTime searchEndTime = convertToTime(searchShiftDto.getToEndHour(), searchShiftDto.getToEndMinute());
+
+        ShiftSpecification startSpec = getShiftSpecificationForTime(START_TIME_KEY, ">:", searchStartTime);
+        ShiftSpecification endSpec = getShiftSpecificationForTime(END_TIME_KEY, "<:", searchEndTime);
+
+        return shiftDao.findAll(Specification.where(startSpec).and(endSpec), getSortShiftByStartTime()).stream()
+                .map(this::buildResultShift)
+                .collect(Collectors.toList());
+    }
+
     public List<ResultShiftDto> searchShifts(String username, @NotNull SearchShiftDto searchShiftDto) {
-        userService.validateUser(username);
+        String user = userService.getCurrentUsername(username);
+        userService.validateUser(user);
 
         LocalTime searchStartTime = convertToTime(searchShiftDto.getFromStartHour(), searchShiftDto.getFromStartMinute());
         LocalTime searchEndTime = convertToTime(searchShiftDto.getToEndHour(), searchShiftDto.getToEndMinute());
 
-        ShiftSpecification userSpec = getShiftSpecificationForUsername(username);
+        ShiftSpecification userSpec = getShiftSpecificationForUsername(user);
         ShiftSpecification startSpec = getShiftSpecificationForTime(START_TIME_KEY, ">:", searchStartTime);
         ShiftSpecification endSpec = getShiftSpecificationForTime(END_TIME_KEY, "<:", searchEndTime);
 
@@ -48,24 +61,30 @@ public class ShiftService {
                 .collect(Collectors.toList());
     }
 
-    public Shift getShiftFromDb(String username, @NotNull long shiftId) {
-        userService.validateUser(username);
+    public ResultShiftDto getAnyShiftFromDb(@NotNull long shiftId) {
+        return buildResultShift(shiftDao.findById(shiftId)
+                .orElseThrow(() -> new ShiftNotFoundException("Unable to find shift for username with id " + shiftId)));
+    }
 
-        ShiftSpecification shiftUserIdSpec = getShiftSpecificationForUsername(username);
+    public Shift getShiftFromDbForUser(String username, @NotNull long shiftId) {
+        String user = userService.getCurrentUsername(username);
+        userService.validateUser(user);
+
+        ShiftSpecification shiftUsernameSpec = getShiftSpecificationForUsername(user);
         ShiftSpecification shiftIdSpecification = getShiftSpecificationForShiftId(shiftId);
 
-        return shiftDao.findOne(Specification.where(shiftUserIdSpec).and(shiftIdSpecification))
-                .orElseThrow(() -> new ShiftNotFoundException("Unable to find shift for username " + username + " with id " + shiftId));
+        return shiftDao.findOne(Specification.where(shiftIdSpecification).and(shiftUsernameSpec))
+                .orElseThrow(() -> new ShiftNotFoundException("Unable to find shift for username " + user + " with id " + shiftId));
     }
 
     public ResultShiftDto getShift(String username, @NotNull long shiftId) throws SecurityException, ShiftNotFoundException {
-        return buildResultShift(getShiftFromDb(username, shiftId));
+        return buildResultShift(getShiftFromDbForUser(username, shiftId));
     }
 
     public ResultShiftDto updateShift(@NotNull long shiftId, @NotNull ShiftDto shiftDto) throws ShiftNotFoundException, ShiftIllegalArgumentException {
-        doShiftValidations(shiftDto);
+        doShiftValidations(shiftDto, shiftId);
 
-        Shift existingShift = getShiftFromDb(shiftDto.getUsername(), shiftId);
+        Shift existingShift = getShiftFromDbForUser(shiftDto.getUsername(), shiftId);
         existingShift.setStartTime(convertToTime(shiftDto.getStartHour(), shiftDto.getStartMinute()));
         existingShift.setEndTime(convertToTime(shiftDto.getEndHour(), shiftDto.getEndMinute()));
 
@@ -75,11 +94,11 @@ public class ShiftService {
     }
 
     public void deleteShift(String username, @NotNull long shiftId) throws ShiftNotFoundException, ShiftIllegalArgumentException {
-        shiftDao.delete(getShiftFromDb(username, shiftId));
+        shiftDao.delete(getShiftFromDbForUser(username, shiftId));
     }
 
     public ResultShiftDto createShift(@NotNull ShiftDto shiftDto) {
-        doShiftValidations(shiftDto);
+        doShiftValidations(shiftDto, null);
 
         Shift shift = translateDtoToShift(shiftDto);
         // persist shift into "database"
@@ -87,22 +106,30 @@ public class ShiftService {
         return buildResultShift(shift);
     }
 
-    private void validateUserShift(ShiftDto shiftDto) throws ShiftIllegalArgumentException {
+    private void validateUserShift(ShiftDto shiftDto, Long shiftId) throws ShiftIllegalArgumentException {
         String username = shiftDto.getUsername();
         ShiftSpecification userSpec = getShiftSpecificationForUsername(username);
 
         // validate newly created shift does not overlap with an existing shift
         boolean isOverlapping = shiftDao.findAll(userSpec).stream()
-                .anyMatch(userShift -> isShiftOverlappingWithAnother(shiftDto, userShift));
+                .anyMatch(userShift -> (isValidAgainstExisting(shiftId, userShift) &&
+                        isShiftOverlappingWithAnother(shiftDto, userShift)));
         if(isOverlapping) {
-            throw new ShiftIllegalArgumentException("This shift overlaps with an existing shift for username ." + username);
+            throw new ShiftIllegalArgumentException("This shift overlaps with an existing shift for username " + username);
         }
     }
 
-    private void doShiftValidations(ShiftDto shiftDto) throws SecurityException, ShiftIllegalArgumentException {
+    private boolean isValidAgainstExisting(Long shiftId, Shift existingShift) {
+        if (shiftId != null) {
+            return !shiftId.toString().equals(existingShift.getId().toString());
+        }
+        return true;
+    }
+
+    private void doShiftValidations(ShiftDto shiftDto, Long shiftId) throws SecurityException, ShiftIllegalArgumentException {
         userService.validateUser(shiftDto.getUsername());
-        validateUserShift(shiftDto);
         validateShiftTimes(shiftDto);
+        validateUserShift(shiftDto, shiftId);
     }
 
     private ResultShiftDto buildResultShift(Shift shift) {
@@ -112,10 +139,6 @@ public class ShiftService {
                 .startTime(formatLocalTime(shift.getStartTime()))
                 .endTime(formatLocalTime(shift.getEndTime()))
                 .build();
-    }
-
-    public List<Shift> getAllShifts() {
-        return shiftDao.findAll(getSortShiftByStartTime());
     }
 
     private Sort getSortShiftByStartTime() {

@@ -27,6 +27,8 @@ public class ShiftSpecification implements Specification<Shift> {
             if (root.get(criteria.getKey()).getJavaType() == String.class) {
                 return builder.like(
                         root.get(criteria.getKey()), "%" + criteria.getUsername() + "%");
+            } else if (root.get(criteria.getKey()).getJavaType() == Long.class) {
+                return builder.equal(root.get(criteria.getKey()), criteria.getId());
             } else {
                 return builder.equal(root.get(criteria.getKey()), criteria.getTime());
             }
