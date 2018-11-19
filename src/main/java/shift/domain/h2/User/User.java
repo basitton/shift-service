@@ -3,9 +3,10 @@ package shift.domain.h2.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import shift.domain.h2.Role.Role;
-import shift.domain.h2.Shift.Shift;
+import shift.domain.security.Authority;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotEmpty;
 import java.util.Set;
 
 @Getter
@@ -18,26 +19,23 @@ public class User {
     @GeneratedValue
     private Long id;
 
-    @NonNull
+    @NotEmpty
     @Column(unique = true)
     private String username;
 
     @JsonIgnore
+    @NotEmpty
     private String password;
-
-    public User(Long id) {
-        this.id = id;
-    }
-
-    public User(Long id, String username, String password) {
-        this.id = id;
-        this.username = username;
-        this.password = password;
-    }
 
     @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinTable(name = "USER_ROLES", joinColumns = {
             @JoinColumn(name = "USER_ID") }, inverseJoinColumns = {
             @JoinColumn(name = "ROLE_ID") })
     private Set<Role> roles;
+
+    public User(String username, String password, Set<Role> roles) {
+        this.username = username;
+        this.password = password;
+        this.roles = roles;
+    }
 }

@@ -2,14 +2,13 @@ package shift.service.User;
 
 import org.h2.util.StringUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import shift.domain.dao.UserRepository;
-import shift.domain.dto.ShiftDto;
 import shift.domain.h2.SearchCriteria;
-import shift.domain.h2.Shift.ShiftSpecification;
 import shift.domain.h2.User.User;
 import shift.domain.h2.User.UserSpecification;
-import shift.exception.ShiftIllegalArgumentException;
 
 import java.util.List;
 
@@ -30,13 +29,13 @@ public class UserService {
         return new UserSpecification(getSearchCriteriaForUsername(username));
     }
 
-    public User getUserByUsername(String username) {
+    public User getUserByUsername(String username) throws UsernameNotFoundException {
         UserSpecification userSpecification = getUserSpecification(getCurrentUsername(username));
         return userDao.findOne(userSpecification)
-                .orElseThrow(() -> new SecurityException("No username exists with username " + username));
+                .orElseThrow(() -> new UsernameNotFoundException("No username exists with username " + username));
     }
 
-    void validateUser(String username) {
+    public void validateUser(String username) throws UsernameNotFoundException {
         getUserByUsername(username);
     }
 
@@ -55,5 +54,7 @@ public class UserService {
         return SecurityContextHolder.getContext().getAuthentication().getName();
     }
 
-
+    public void createUser(User user) {
+        userDao.save(user);
+    }
 }

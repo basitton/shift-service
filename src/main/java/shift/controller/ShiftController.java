@@ -10,9 +10,11 @@ import shift.domain.h2.Shift.Shift;
 import shift.exception.ShiftNotFoundException;
 import shift.service.Shift.ShiftService;
 
+import javax.validation.Valid;
 import java.util.List;
 
 @RestController
+@RequestMapping("/shifts")
 public class ShiftController {
 
     private ShiftService shiftService;
@@ -23,43 +25,43 @@ public class ShiftController {
     }
 
     @PreAuthorize("hasRole('ROLE_MANAGER')")
-    @GetMapping("/shifts/all")
+    @GetMapping("/all")
     public List<Shift> getAllShifts() {
         return shiftService.getAllShifts();
     }
 
     @PreAuthorize("hasRole('ROLE_MANAGER')")
-    @PostMapping("/shifts")
-    public ResultShiftDto createShift(@RequestBody ShiftDto shiftDto) {
+    @PostMapping("")
+    public ResultShiftDto createShift(@Valid @RequestBody ShiftDto shiftDto) {
         return shiftService.createShift(shiftDto);
     }
 
     @PreAuthorize("hasAnyRole('ROLE_MANAGER, ROLE_EMPLOYEE')")
-    @GetMapping("/shifts/{shiftId}")
+    @GetMapping("/{shiftId}")
     public ResultShiftDto getShift(@PathVariable(value = "shiftId") long shiftId) throws ShiftNotFoundException {
         return shiftService.getShift(null, shiftId);
     }
 
     @PreAuthorize("hasRole('ROLE_MANAGER')")
-    @GetMapping("/shifts/users/{username}/{shiftId}")
+    @GetMapping("/users/{username}/{shiftId}")
     public ResultShiftDto getShiftForUser(@PathVariable(value = "username") String username, @PathVariable(value = "shiftId") long shiftId) throws ShiftNotFoundException {
         return shiftService.getShift(username, shiftId);
     }
 
     @PreAuthorize("hasRole('ROLE_MANAGER')")
-    @PutMapping("/shifts/{shiftId}")
-    public ResultShiftDto updateShift(@PathVariable(value = "shiftId") long shiftId, @RequestBody ShiftDto shiftDto) throws ShiftNotFoundException {
+    @PutMapping("/{shiftId}")
+    public ResultShiftDto updateShift(@PathVariable(value = "shiftId") long shiftId, @Valid @RequestBody ShiftDto shiftDto) throws ShiftNotFoundException {
         return shiftService.updateShift(shiftId, shiftDto);
     }
 
     @PreAuthorize("hasRole('ROLE_MANAGER')")
-    @DeleteMapping("/shifts/users/{username}/{shiftId}")
+    @DeleteMapping("/users/{username}/{shiftId}")
     public void deleteShift(@PathVariable(value = "username") String username, @PathVariable(value = "shiftId") long shiftId) throws ShiftNotFoundException {
         shiftService.deleteShift(username, shiftId);
     }
 
     @PreAuthorize("hasAnyRole('ROLE_MANAGER, ROLE_EMPLOYEE')")
-    @GetMapping("/shifts")
+    @GetMapping("")
     public List<ResultShiftDto> getAllCurrentUserShifts(@RequestParam(value = "fromStartHour", defaultValue = "0", required = false) int fromStartHour,
                                                @RequestParam(value = "fromStartMinute", defaultValue = "0", required = false) int fromStartMinute,
                                                @RequestParam(value = "toEndHour", defaultValue = "23", required = false) int toEndHour,
@@ -70,7 +72,7 @@ public class ShiftController {
     }
 
     @PreAuthorize("hasRole('ROLE_MANAGER')")
-    @GetMapping("/shifts/users/{username}")
+    @GetMapping("/users/{username}")
     public List<ResultShiftDto> getAllShiftsForUser(@PathVariable(value = "username") String username,
                                                     @RequestParam(value = "fromStartHour", defaultValue = "0", required = false) int fromStartHour,
                                                     @RequestParam(value = "fromStartMinute", defaultValue = "0", required = false) int fromStartMinute,

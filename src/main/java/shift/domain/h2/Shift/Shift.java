@@ -3,6 +3,7 @@ package shift.domain.h2.Shift;
 import lombok.*;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.time.LocalTime;
 
 @Getter
@@ -17,9 +18,9 @@ public class Shift {
 
     private String username;
 
-    @NonNull
+    @NotNull
     private LocalTime startTime;
 
-    @NonNull
+    @NotNull
     private LocalTime endTime;
 }

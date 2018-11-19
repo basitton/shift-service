@@ -34,6 +34,8 @@ public class ShiftService {
     }
 
     public List<ResultShiftDto> searchShifts(String username, @NotNull SearchShiftDto searchShiftDto) {
+        userService.validateUser(username);
+
         LocalTime searchStartTime = convertToTime(searchShiftDto.getFromStartHour(), searchShiftDto.getFromStartMinute());
         LocalTime searchEndTime = convertToTime(searchShiftDto.getToEndHour(), searchShiftDto.getToEndMinute());
 
@@ -47,6 +49,8 @@ public class ShiftService {
     }
 
     public Shift getShiftFromDb(String username, @NotNull long shiftId) {
+        userService.validateUser(username);
+
         ShiftSpecification shiftUserIdSpec = getShiftSpecificationForUsername(username);
         ShiftSpecification shiftIdSpecification = getShiftSpecificationForShiftId(shiftId);
 
@@ -96,6 +100,7 @@ public class ShiftService {
     }
 
     private void doShiftValidations(ShiftDto shiftDto) throws SecurityException, ShiftIllegalArgumentException {
+        userService.validateUser(shiftDto.getUsername());
         validateUserShift(shiftDto);
         validateShiftTimes(shiftDto);
     }
@@ -118,7 +123,7 @@ public class ShiftService {
     }
 
     private ShiftSpecification getShiftSpecificationForUsername(String username) {
-        return new ShiftSpecification(getSearchCriteriaForShiftUsername(username));
+        return new ShiftSpecification(getSearchCriteriaForShiftUsername(userService.getCurrentUsername(username)));
     }
 
     private SearchCriteria getSearchCriteriaForShiftUsername(String username)  {
