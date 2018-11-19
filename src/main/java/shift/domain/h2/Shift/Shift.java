@@ -1,10 +1,9 @@
-package shift.domain.h2;
+package shift.domain.h2.Shift;
 
 import lombok.*;
+import shift.domain.h2.User.User;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import javax.persistence.*;
 import java.time.LocalTime;
 
 @Getter
@@ -12,13 +11,11 @@ import java.time.LocalTime;
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserShift {
-
+public class Shift {
     @Id
     @GeneratedValue
     private Long id;
 
-    @NonNull
     private String username;
 
     @NonNull

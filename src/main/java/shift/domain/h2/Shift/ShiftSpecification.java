@@ -1,25 +1,25 @@
-package shift.domain.h2;
+package shift.domain.h2.Shift;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
+import shift.domain.h2.SearchCriteria;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
-import java.time.LocalTime;
 
-public class UserShiftSpecification implements Specification<UserShift> {
+public class ShiftSpecification implements Specification<Shift> {
     private SearchCriteria criteria;
 
     @Autowired
-    public UserShiftSpecification(SearchCriteria criteria) {
+    public ShiftSpecification(SearchCriteria criteria) {
         this.criteria = criteria;
     }
 
     @Override
     public Predicate toPredicate
-            (Root<UserShift> root, CriteriaQuery<?> query, CriteriaBuilder builder) {
+            (Root<Shift> root, CriteriaQuery<?> query, CriteriaBuilder builder) {
 
         String operation = criteria.getOperation();
 

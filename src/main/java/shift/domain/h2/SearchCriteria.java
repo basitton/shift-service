@@ -1,6 +1,5 @@
 package shift.domain.h2;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -21,8 +20,15 @@ public class SearchCriteria {
         this.username = username;
     }
 
+    public SearchCriteria(String key, String operation, long id) {
+        this.key = key;
+        this.operation = operation;
+        this.id = id;
+    }
+
     private String key;
     private String operation;
     private LocalTime time;
     private String username;
+    private long id;
 }

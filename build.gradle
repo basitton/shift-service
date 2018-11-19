@@ -38,5 +38,15 @@ dependencies {
     compile("commons-collections:commons-collections:3.2")
     compile("com.h2database:h2")
     compile("org.springframework.boot:spring-boot-starter-data-jpa")
+
+
+    compile("org.springframework.boot:spring-boot-starter-parent:2.0.1.RELEASE")
+    compile("org.springframework.boot:spring-boot-starter-security")
+    compile("org.springframework.security:spring-security-web")
+    compile("io.jsonwebtoken:jjwt:0.9.0")
+
     testCompile("org.springframework.boot:spring-boot-starter-test")
+    testCompile("junit:junit:4.+")
+    testCompile("mysql:mysql-connector-java")
+    testCompile("com.h2database:h2")
 }

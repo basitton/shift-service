@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import lombok.*;
 import org.hibernate.validator.constraints.Range;
 
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
 @Getter
@@ -15,6 +16,8 @@ import javax.validation.constraints.NotNull;
 public class ShiftDto {
 
     private Integer id;
+
+    private String username;
 
     @Range(max = 23, message = "Shift hour can be between 0-23")
     @NotNull
