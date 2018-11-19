@@ -32,8 +32,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException, SecurityException {
-
-        if (request.getRequestURI().contains("shifts")) {
+        String requestURI = request.getRequestURI();
+        if (requestURI.contains("shifts") || requestURI.contains("users")) {
             String jwt = getJwtFromRequest(request);
 
             if (tokenProvider.validateToken(jwt)) {

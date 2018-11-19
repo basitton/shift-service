@@ -88,7 +88,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                     .antMatchers("auth/token/**").permitAll()
                     .antMatchers("/console/**").permitAll()
                     .antMatchers("/h2/**").permitAll()
-                    .antMatchers("/shifts/**", "/auth/username/**").authenticated()
+                    .antMatchers("/shifts/**", "/auth/username/**", "/users/**").authenticated()
                 .and()
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
     }

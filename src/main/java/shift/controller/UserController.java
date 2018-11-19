@@ -22,7 +22,7 @@ public class UserController {
     }
 
     @PreAuthorize("hasRole('ROLE_MANAGER')")
-    @GetMapping("")
+    @GetMapping("/all")
     public List<User> getAllUsers() {
         return userService.getAllUsers();
     }
