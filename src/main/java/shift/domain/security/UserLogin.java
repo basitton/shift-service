@@ -1,16 +1,17 @@
 package shift.domain.security;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import javax.validation.constraints.NotBlank;
 
+/**
+ * Data input object for user login when requesting a token
+ */
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Data
 public class UserLogin {
 
     @NotBlank

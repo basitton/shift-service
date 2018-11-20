@@ -2,18 +2,16 @@ package shift.security;
 
 import io.jsonwebtoken.*;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 import java.util.stream.Collectors;
 
+/**
+ * Provides token generation, validation, and parsing
+ */
 @Component
 public class JwtTokenProvider {
     private static final String AUTHORITIES_KEY = "authorities";
@@ -24,6 +22,11 @@ public class JwtTokenProvider {
     @Value("${app.jwtExpirationInMs}")
     private int jwtExpirationInMs;
 
+    /**
+     * Generates a token given a {@link Authentication} with user info and roles
+     * @param authentication {@link Authentication} object with user info and roles
+     * @return the generated token
+     */
     public String generateToken(Authentication authentication) {
         final String authorities = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
@@ -38,20 +41,11 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    UsernamePasswordAuthenticationToken getAuthentication(final String token, final UserDetails userDetails) throws SecurityException {
-        final Claims claims = Jwts.parser()
-                .setSigningKey(jwtSecret)
-                .parseClaimsJws(token)
-                .getBody();
-
-        final Collection authorities =
-                Arrays.stream(claims.get(AUTHORITIES_KEY).toString().split(","))
-                        .map(SimpleGrantedAuthority::new)
-                        .collect(Collectors.toList());
-
-        return new UsernamePasswordAuthenticationToken(userDetails, "", authorities);
-    }
-
+    /**
+     * Parses a given token and gets the username
+     * @param token the user token
+     * @return the username
+     */
     public String getUsernameFromToken(String token) {
         Claims claims = Jwts.parser()
                 .setSigningKey(jwtSecret)
@@ -61,6 +55,11 @@ public class JwtTokenProvider {
         return claims.getSubject();
     }
 
+    /**
+     * Validates a given token
+     * @param authToken the token to be validated
+     * @return true if token is valid; false if token is invalid or expired
+     */
     public boolean validateToken(String authToken) {
         try {
             Claims claims = Jwts.parser()

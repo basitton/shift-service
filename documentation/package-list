@@ -1,0 +1,14 @@
+shift
+shift.config
+shift.controller
+shift.domain.dao
+shift.domain.dto
+shift.domain.h2
+shift.domain.h2.Role
+shift.domain.h2.Shift
+shift.domain.h2.User
+shift.domain.security
+shift.exception
+shift.security
+shift.service.Shift
+shift.service.User

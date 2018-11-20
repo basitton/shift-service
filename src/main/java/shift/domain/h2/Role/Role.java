@@ -1,5 +1,6 @@
 package shift.domain.h2.Role;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -8,6 +9,9 @@ import lombok.Setter;
 import javax.persistence.*;
 import javax.validation.constraints.NotEmpty;
 
+/**
+ * Provides entity model for Role data
+ */
 @Getter
 @Setter
 @Entity
@@ -19,6 +23,7 @@ public class Role {
         this.name = name;
     }
 
+    @JsonIgnore
     @Id
     @GeneratedValue
     private Long id;

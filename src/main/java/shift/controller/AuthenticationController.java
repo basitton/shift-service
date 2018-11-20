@@ -23,7 +23,9 @@ import javax.validation.Valid;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@CrossOrigin(origins = "*", maxAge = 3600)
+/**
+ * Provides endpoints for token generation and registering users
+ */
 @RestController
 @RequestMapping("/auth")
 public class AuthenticationController {
@@ -62,13 +64,12 @@ public class AuthenticationController {
     @PostMapping("/register")
     public String register(@Valid @RequestBody Registration registration) throws SecurityException {
         String username = registration.getUsername();
-        String password = bCryptPasswordEncoder.encode(registration.getPassword());
 
         try {
             userService.getUserByUsername(registration.getUsername());
             throw new SecurityException("A user already exists with this username.");
         } catch (UsernameNotFoundException ex) {
-
+            String password = bCryptPasswordEncoder.encode(registration.getPassword());
             registration.setPassword(password);
 
             Set<Role> roles = registration.getAuthorities().stream()
@@ -81,6 +82,7 @@ public class AuthenticationController {
         return "User has successfully been created. username = " + username;
     }
 
+    // encapsulation
     private User getUser(String username, String password, Set<Role> roles) {
         return new User(username, password, roles);
     }

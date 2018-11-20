@@ -1,5 +1,6 @@
 package shift.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -9,17 +10,18 @@ public class AppController {
     @RequestMapping("/")
     public String index() {
         return "Welcome to the shift service. " +
-                "Please check the README to find out all the cool features this API can do!";
+                "To use this app, please register.";
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_USER, ROLE_MANAGER, ROLE_EMPLOYEE')")
     @RequestMapping("/app/help")
     public String help() {
-        return "Visit https://help.wheniwork.com/ for help!";
+        return "Visit our official site for help becoming an employee! (or read README)";
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_USER, ROLE_MANAGER, ROLE_EMPLOYEE')")
     @RequestMapping("/app/info")
     public String info() {
-        return "You may sign up by reading the 'Sign Up' section below!" +
-                "Also, you may visit https://help.wheniwork.com/article-categories/getting-started/ to officially get started!";
+        return "You may sign up by reading the 'Sign Up' section below!";
     }
 }

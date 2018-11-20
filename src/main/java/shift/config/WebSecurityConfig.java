@@ -20,6 +20,9 @@ import shift.security.JwtAuthenticationEntryPoint;
 import shift.security.JwtAuthenticationFilter;
 import shift.security.JwtTokenProvider;
 
+/**
+ * Extends {@link WebSecurityConfigurerAdapter} and serves as a configuration class for the application's web security classes.
+ */
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)

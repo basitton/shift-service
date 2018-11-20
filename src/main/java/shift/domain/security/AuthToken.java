@@ -1,12 +1,17 @@
 package shift.domain.security;
 
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
 import javax.validation.constraints.NotEmpty;
 
+/**
+ * Data object returned for token requests
+ */
 @Getter
 @Setter
+@Data
 public class AuthToken {
     private static final String TOKEN_TYPE = "Bearer";
 
@@ -17,5 +22,6 @@ public class AuthToken {
     @NotEmpty
     private String token;
 
+    @NotEmpty
     private String tokenType = TOKEN_TYPE;
 }

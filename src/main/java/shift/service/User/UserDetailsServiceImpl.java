@@ -12,7 +12,9 @@ import shift.domain.h2.User.User;
 import shift.domain.h2.User.UserSpecification;
 import shift.domain.security.UserPrincipal;
 
-
+/**
+ * Implements {@link UserDetailsService} for authenticating and transporting {@link UserDetails} within the authentication manager
+ */
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
     private UserRepository userDao;
@@ -36,10 +38,12 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         return UserPrincipal.create(user);
     }
 
+    // encapsulation
     private SearchCriteria getSearchCriteriaForUsername(String username) {
         return new SearchCriteria("username", ":", username);
     }
 
+    // encapsulation
     private UserSpecification getUserSpecification(String username) {
         return new UserSpecification(getSearchCriteriaForUsername(username));
     }

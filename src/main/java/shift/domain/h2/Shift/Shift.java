@@ -6,6 +6,9 @@ import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.time.LocalTime;
 
+/**
+ * Provides entity model for Shift data
+ */
 @Getter
 @Setter
 @Entity

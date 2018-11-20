@@ -9,6 +9,9 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
+/**
+ * Implements {@link Specification} for querying the {@link Shift} table
+ */
 public class ShiftSpecification implements Specification<Shift> {
     private SearchCriteria criteria;
 

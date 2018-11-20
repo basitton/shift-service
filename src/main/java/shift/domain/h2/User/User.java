@@ -3,18 +3,21 @@ package shift.domain.h2.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import shift.domain.h2.Role.Role;
-import shift.domain.security.Authority;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotEmpty;
 import java.util.Set;
 
+/**
+ * Provides entity model for User data
+ */
 @Getter
 @Setter
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
 public class User {
+    @JsonIgnore
     @Id
     @GeneratedValue
     private Long id;

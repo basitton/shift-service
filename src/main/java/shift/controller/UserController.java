@@ -10,6 +10,9 @@ import shift.service.User.UserService;
 
 import java.util.List;
 
+/**
+ * Provides endpoints for managing users
+ */
 @RestController
 @RequestMapping("/users")
 public class UserController {
