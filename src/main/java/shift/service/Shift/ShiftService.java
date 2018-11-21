@@ -15,7 +15,6 @@ import shift.exception.ShiftIllegalArgumentException;
 import shift.exception.ShiftNotFoundException;
 import shift.service.User.UserService;
 
-import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -80,18 +79,6 @@ public class ShiftService {
     }
 
     /**
-     * Gets a specific user's shift by its id
-     * @param username the username of the user for which shifts are being searched
-     * @param shiftId the shift's id
-     * @return the user's shift for the given id
-     * @throws UsernameNotFoundException when there is no user existing for the given username
-     * @throws ShiftNotFoundException when there is no shift existing with that id for the specified user
-     */
-    public ResultShiftDto getShiftForUser(String username, @NotNull long shiftId) throws UsernameNotFoundException, ShiftNotFoundException {
-        return buildResultShift(getShiftFromDbForUser(username, shiftId));
-    }
-
-    /**
      * Creates the shift for a given user
      * <p>
      * Does the below validations:
@@ -115,6 +102,16 @@ public class ShiftService {
     }
 
     /**
+     * Gets a single shift from the db.
+     * @param shiftId the unique id of the shift
+     * @return a {@link ResultShiftDto} of the shift
+     * @throws ShiftNotFoundException when no shift with the given id is found
+     */
+    public ResultShiftDto getShift(Long shiftId) throws ShiftNotFoundException {
+        return buildResultShift(getShiftFromDb(shiftId));
+    }
+
+    /**
      * Updates the shift for the given user
      * <p>
      * Does the below validations:
@@ -124,34 +121,26 @@ public class ShiftService {
      * 4. The updated shift does not overlap with another shift of the user
      * </p>
      * @param shiftId the shift to be updated
-     * @param shiftDto the updated parameters {@link ShiftDto}. A username must be specified here (or it will default to the currently logged in user) in order to do rule validations
+     * @param shiftDto the updated parameters {@link ShiftDto}. Any given username will be ignored.
      * @return the result of the shift update
      * @throws ShiftNotFoundException when there is no shift existing for the given username with the given id
      * @throws ShiftIllegalArgumentException when the given params from the shiftDto violates rules listed in the method description
-     * @throws UsernameNotFoundException when the specified user does not exist
      */
-    public ResultShiftDto updateShift(@NotNull long shiftId, @NotNull ShiftDto shiftDto) throws ShiftNotFoundException, ShiftIllegalArgumentException, UsernameNotFoundException {
+    public ResultShiftDto updateShift(@NotNull long shiftId, @NotNull ShiftDto shiftDto) throws ShiftNotFoundException, ShiftIllegalArgumentException {
+        Shift existingShift = getShiftFromDb(shiftId);
+
+        // updating the username so that we make sure we are validating the correct shift
+        shiftDto.setUsername(existingShift.getUsername());
+
         doShiftValidations(shiftDto, shiftId);
 
         // only make updates to the time of the existing shift
-        Shift existingShift = getShiftFromDbForUser(shiftDto.getUsername(), shiftId);
         existingShift.setStartTime(convertToTime(shiftDto.getStartHour(), shiftDto.getStartMinute()));
         existingShift.setEndTime(convertToTime(shiftDto.getEndHour(), shiftDto.getEndMinute()));
 
         shiftDao.save(existingShift);
 
         return buildResultShift(existingShift);
-    }
-
-    /**
-     * Deletes the shift for the specified user
-     * @param username the user's shift to be deleted
-     * @param shiftId the id of the shift to be deleted
-     * @throws ShiftNotFoundException when the shift for the given user with the given id does not exist
-     * @throws UsernameNotFoundException when the specified user does not exist
-     */
-    public void deleteUserShift(@NotEmpty String username, @NotNull long shiftId) throws ShiftNotFoundException, UsernameNotFoundException {
-        shiftDao.delete(getShiftFromDbForUser(username, shiftId));
     }
 
     /**
@@ -168,20 +157,8 @@ public class ShiftService {
                 .orElseThrow(() -> new ShiftNotFoundException("Unable to find shift with id " + shiftId));
     }
 
-    private Shift getShiftFromDbForUser(String username, @NotNull long shiftId) throws ShiftNotFoundException {
-        String user = userService.getCurrentUsername(username);
-        userService.validateUser(user);
-
-        // specifications allow for table parameter search in H2 DB
-        ShiftSpecification shiftUsernameSpec = getShiftSpecificationForUsername(user);
-        ShiftSpecification shiftIdSpecification = getShiftSpecificationForShiftId(shiftId);
-
-        return shiftDao.findOne(Specification.where(shiftIdSpecification).and(shiftUsernameSpec))
-                .orElseThrow(() -> new ShiftNotFoundException("Unable to find shift for username " + user + " with id " + shiftId));
-    }
-
     private void validateUserShift(ShiftDto shiftDto, Long shiftId) throws ShiftIllegalArgumentException {
-        String username = shiftDto.getUsername();
+        String username = userService.getCurrentUsername(shiftDto.getUsername());
         ShiftSpecification userSpec = getShiftSpecificationForUsername(username);
 
         // validate newly created shift does not overlap with an existing shift
@@ -225,7 +202,7 @@ public class ShiftService {
 
     // encapsulation
     private ShiftSpecification getShiftSpecificationForUsername(String username) {
-        return new ShiftSpecification(getSearchCriteriaForShiftUsername(userService.getCurrentUsername(username)));
+        return new ShiftSpecification(getSearchCriteriaForShiftUsername(username));
     }
 
     // encapsulation
@@ -245,7 +222,7 @@ public class ShiftService {
 
     // encapsulation
     private ShiftSpecification getShiftSpecificationForTime(String key, String operation, LocalTime time) {
-        return  new ShiftSpecification(getSearchCriteriaForShiftTime(key, operation, time));
+        return new ShiftSpecification(getSearchCriteriaForShiftTime(key, operation, time));
     }
 
     // encapsulation

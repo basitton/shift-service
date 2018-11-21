@@ -24,6 +24,10 @@ public class UserController {
         this.userService = userService;
     }
 
+    /**
+     * Gets all users in the database. Only managers can access this endpoint
+     * @return a list of {@link User} that are in the database
+     */
     @PreAuthorize("hasRole('ROLE_MANAGER')")
     @GetMapping("/all")
     public List<User> getAllUsers() {

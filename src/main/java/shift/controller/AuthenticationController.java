@@ -46,6 +46,12 @@ public class AuthenticationController {
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
     }
 
+    /**
+     * Gets a generated token for the user logging in.
+     * @param userLogin {@link UserLogin} object for signing in
+     * @return A JWT token
+     * @throws AuthenticationException If the username and/or password is invalid
+     */
     @PostMapping("/token/generate-token")
     public ResponseEntity login(@RequestBody UserLogin userLogin) throws AuthenticationException {
 
@@ -61,6 +67,12 @@ public class AuthenticationController {
         return ResponseEntity.ok(new AuthToken(token));
     }
 
+    /**
+     * Registers a user to use the application.
+     * @param registration {@link Registration} object for registering the user
+     * @return A success message
+     * @throws SecurityException when the given username already exists
+     */
     @PostMapping("/register")
     public String register(@Valid @RequestBody Registration registration) throws SecurityException {
         String username = registration.getUsername();

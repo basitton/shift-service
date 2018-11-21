@@ -14,6 +14,7 @@ import java.time.LocalTime;
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class Shift {
     @Id
     @GeneratedValue
