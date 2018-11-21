@@ -5,6 +5,8 @@ This API assumes it is dedicated to one workplace, with managers and employees. 
 
 This API also allows for external users to get quick info from the api (via the `/app` endpoint)
 
+**There is additional application documentation if you open the index.html file located in the `documents` directory.**
+
 ## How to Run
 
 ### Hosted Endpoint
@@ -20,11 +22,11 @@ The application is exposed on port 8080
 - Install Gradle 4+
 
 From the root of the project, run:
-```jshelllanguage
+```batch
 ./gradlew clean build
 ```
 
-```jshelllanguage
+```batch
 java -jar build/libs/shift-service-0.1.0.jar
 ```
 
@@ -73,7 +75,7 @@ By Default, there are 3 users already loaded into the database upon startup. You
 - Role: ROLE_USER
 
 ### JWT (JSON Web Token) Token Authentication
-After registering, you will be able to "login" (with username and passowrd) by `POST` to the `/login` endpoint and a JWT will be returned.
+After registering, you will be able to "login" (with username and passowrd) by `POST` to the `/auth/token/generate-token` endpoint and a JWT will be returned.
 
 For each request to the API, include an `Authorization` header with the value of `Bearer <your-generated-jwt>` 
 
