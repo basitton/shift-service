@@ -27,6 +27,9 @@ public class ShiftServiceTest {
     @Mock
     ShiftRepository shiftDao;
 
+    @Mock
+    UserService userService;
+
     @InjectMocks
     ShiftService shiftService;
 
@@ -36,8 +39,9 @@ public class ShiftServiceTest {
     }
 
     @Test
-    public void testCreateShiftWithUsername() throws Exception {
+    public void testCreateShiftWithUsername() {
         ShiftDto shiftDto = getDefaultShiftDto();
+        shiftDto.setUsername("username");
         ResultShiftDto resultShiftDto = getDefaultResultShiftDto();
 
         assertEquals(resultShiftDto, shiftService.createShift(shiftDto));
